@@ -1,0 +1,114 @@
+//Car movement
+
+//requires a class variable double "dist_moved"
+//also variables double rpm_avg,rpm_left, rpm_right and hall_interval
+void fw_half_tile()
+{
+    if (dist_moved > 0.2)
+    {
+        motor.set_speed(0); //Your object that is motor
+        motor1.set_speed(0);
+        dist_moved = 0.0;
+    }
+    else
+    {
+        motor.set_speed(tar_speed);
+        motor1.set_speed(tar_speed);
+        if (c_hall.isTimeToTakeMeasurement()) //This is just when to check the speed
+        {
+            current_RPM = sense.requestRPM();
+            current_RPM1 = sense1.requestRPM();
+            rpm_left = (double) current_RPM;
+            rpm_right = (double) current_RPM1;
+            rpm = (rpm_left+rpm_right)/2;
+            dist_moved = dist_moved + ((dia/2.0)*rpm*(2*PI/60)*hall_interval)*0.8;
+        }
+    }            
+}
+
+
+//create state variable turn_state
+//enum for that state variable: init, turn, cleanup
+
+
+enum turn_enum {
+    init, turn, cleanup
+};
+
+
+//requires a check for whether the thing has turned(true) or not(false)
+bool turn_left()
+{
+    bool finished = false;
+    switch (turn_state)
+    {
+        case init:
+            motor.change_direction();
+            turn_state = turn;
+            break;
+        case turn:                    
+            motor.set_speed(tar_speed);
+            motor1.set_speed(tar_speed);
+            while(dist_moved < 0.04)
+            {
+                if (c_hall.isTimeToTakeMeasurement())
+                {
+                    current_RPM = sense.requestRPM();
+                    current_RPM1 = sense1.requestRPM();
+                    rpm_left = (double) current_RPM;
+                    rpm_right = (double) current_RPM1;
+                    rpm = (rpm_left+rpm_right)/2;
+                    dist_moved = dist_moved + ((dia/2.0)*rpm*(2*PI/60)*hall_interval)*0.8;
+                }
+            }
+            turn_state = cleanup;
+            break;
+        case cleanup:
+            motor.set_speed(0);
+            motor1.set_speed(0);
+            motor.change_direction();
+            dist_moved = 0;
+            return finished = true;
+            break;                    
+    }
+    
+    return finished = false;
+}
+
+void turn_right()
+{
+    bool finished = false;
+    switch (turn_state)
+    {
+        case init:
+            motor1.change_direction();
+            turn_state = turn;
+            break;
+        case turn:                    
+            motor.set_speed(tar_speed);
+            motor1.set_speed(tar_speed);
+            while(dist_moved < 0.04)
+            {
+                if (c_hall.isTimeToTakeMeasurement())
+                {
+                    current_RPM = sense.requestRPM();
+                    current_RPM1 = sense1.requestRPM();
+                    rpm_left = (double) current_RPM;
+                    rpm_right = (double) current_RPM1;
+                    rpm = (rpm_left+rpm_right)/2;
+                    dist_moved = dist_moved + ((dia/2.0)*rpm*(2*PI/60)*hall_interval)*0.8;
+                }
+            }
+            turn_state = cleanup;
+            break;
+        case cleanup:
+            motor.set_speed(0);
+            motor1.set_speed(0);
+            motor.change_direction();
+            dist_moved = 0;
+            return finished = true;
+            break;                    
+    }
+    
+    return finished = false;
+}
